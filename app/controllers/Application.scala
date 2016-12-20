@@ -1,25 +1,24 @@
 package controllers
 
 import java.net.ConnectException
-import java.util.concurrent.Executors
 import javax.inject.Inject
 import play.Logger
 import play.api.libs.json.JsResultException
 import play.api.mvc._
-import scala.collection.immutable.HashMap
 import scala.concurrent.{ExecutionContext, Future, TimeoutException}
 import scala.util.control.NonFatal
 
-class Application @Inject() (theGuardianNewsFetcher: TheGuardianNewsFetcher, wordCounter: WordCounter) extends Controller {
-  private implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(2))
+class Application @Inject() (theGuardianNewsFetcher: TheGuardianNewsFetcher) extends Controller {
+  private val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   def index = Action.async {
-    val allNews: Future[List[String]] = theGuardianNewsFetcher.fetchNewsFor("turkey", 90)
+    val s = System.currentTimeMillis()
+    val allNews: Future[Map[String, Int]] = theGuardianNewsFetcher.fetchNewsFor("turkey", 90)
     allNews.map(response => {
-      val wordsFreq: HashMap[String, Int] = wordCounter.calculateWordsfrequence(response.mkString)
-      val sortedWords: Seq[(String, Int)] = wordsFreq.toSeq.sortWith(_._2 > _._2)
-      Ok(sortedWords.toString)
-    }).recover{
+      val sortedWords: Seq[(String, Int)] = response.toSeq.sortWith(_._2 > _._2)
+      println(System.currentTimeMillis() - s)
+      Ok(sortedWords.toString())
+    })(ec).recover{
       case e: ConnectException =>
         Logger.error("Connection Error", e)
         InternalServerError("There is no internet connection. Please check your connection and retry.")
@@ -30,9 +29,10 @@ class Application @Inject() (theGuardianNewsFetcher: TheGuardianNewsFetcher, wor
         Logger.error("Parsing Error", e)
         InternalServerError("News could not be parsed.")
       case NonFatal(n) =>
-        Logger.error("Some Error", n)
+        Logger.error("Unexpected error", n)
         InternalServerError(n.getMessage)
-    }
+    }(ec)
   }
-
 }
+
+
