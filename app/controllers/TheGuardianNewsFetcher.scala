@@ -79,7 +79,6 @@ class TheGuardianNewsFetcher @Inject() (ws: WSClient, configuration: play.api.Co
         prevFuture.flatMap(prevContents => {
           val s = System.currentTimeMillis()
           next.map(newContent => {
-            //println(System.currentTimeMillis() - s)
             concatMaps(prevContents, newContent)
           })(ec)
         })(ec)
@@ -93,7 +92,6 @@ class TheGuardianNewsFetcher @Inject() (ws: WSClient, configuration: play.api.Co
       .withQueryString("show-fields" -> "all")
       .withRequestTimeout(timeoutDuration)
       .get
-    //println("bitti -> " + url)
     val parsedContent: Future[String] = parseANewsContent(response)
     countWords(parsedContent)
   }
@@ -110,9 +108,7 @@ class TheGuardianNewsFetcher @Inject() (ws: WSClient, configuration: play.api.Co
   }
 
   private def countWords(newsContent: Future[String]): Future[Map[String, Int]] = {
-    val s = System.currentTimeMillis()
     newsContent.map(content => {
-      println(System.currentTimeMillis() - s)
       wordCounter.calculateWordFrequency(content)
     })(ec)
   }
