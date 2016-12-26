@@ -1,51 +1,41 @@
 package controllers
 
-import scala.collection.immutable.HashMap
+import javax.inject.Singleton
+
 import scala.util.matching.Regex
+import scala.collection.mutable.Map
 
 /**
   * Created by mersanuzun on 12/12/16.
   */
+@Singleton
 class WordCounter {
-  private val pattern = new Regex("[a-zA-Z\\-\\'\\’\\`]|[0-9]+[\\,\\.]?[0-9]*")
-
-  /*def calculatePrunedWords(prunedWords: List[String]) = {
-    prunedWords.foldLeft(Map.empty[String, Int]){
-      (prunedWordsFrequency, prunedWord) => {
-        prunedWordsFrequency.get(prunedWord) match {
-          case None => prunedWordsFrequency + (prunedWord -> 1)
-          case _ =>
-            val wordFreq: Int = prunedWordsFrequency(prunedWord)
-            prunedWordsFrequency + (prunedWord -> (wordFreq + 1))
-        }
-      }
-    }
-  }*/
+  private val pattern = new Regex("[a-zA-Z]+[\\-\\'\\’\\`]?[a-zA-Z]+|[0-9]+[\\,\\.]?[0-9]*")
 
   def calculateWordFrequency(string: String): Map[String, Int] = {
     string.split("\\s").foldLeft(Map.empty[String, Int]){
       (wordsFrequency, word) => {
-        //val s: Map[String, Int] = calculatePrunedWords(pruneWord(word))
-        val prunedWord: String = pruneWord(word)
-        wordsFrequency.get(prunedWord) match {
-          case None => wordsFrequency + (prunedWord -> 1)
-          case _ =>
-            val wordFreq: Int = wordsFrequency(prunedWord)
-            wordsFrequency + (prunedWord -> (wordFreq + 1))
-        }
+        pruneWord(word).foreach(prunedWord => {
+          val lowerWord: String = prunedWord.toLowerCase
+          if (lowerWord.nonEmpty){
+            wordsFrequency.get(lowerWord) match {
+              case None => wordsFrequency += (lowerWord -> 1)
+              case Some(s) => wordsFrequency += (lowerWord -> (s + 1))
+            }
+          }
+        })
+        wordsFrequency
       }
     }
   }
 
-  //prune words from Deneme. dEneme, deNeme? denEme: deneMe's didn't
-  private def pruneWord(word: String): String = {
+  //if - comes to pruneword method return empty string
+  //prune words from Deneme. "dEneme, deNeme? denEme: deneMe's didn't
+  //ersan,uzun => [ersan, uzun]
+  private def pruneWord(word: String): List[String] = {
     pattern.findAllIn(word)
-      //.map(_.toUpperCase)
-      //.toList
-      .mkString
-      .toLowerCase
+        .toList
   }
-
 }
 
 
