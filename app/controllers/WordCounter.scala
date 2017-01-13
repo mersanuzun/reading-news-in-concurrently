@@ -3,24 +3,24 @@ package controllers
 import javax.inject.Singleton
 
 import scala.util.matching.Regex
-import scala.collection.mutable.Map
+import scala.collection.mutable.{Map => MMap}
 
 /**
   * Created by mersanuzun on 12/12/16.
   */
 @Singleton
 class WordCounter {
-  private val pattern = new Regex("[a-zA-Z]+[\\-\\'\\’\\`]?[a-zA-Z]+|[0-9]+[\\,\\.]?[0-9]*")
+  private val pattern = new Regex("[a-zA-Z]+[\\-\\'\\’\\`]?[a-zA-Z]*|[0-9]+[\\,\\.]?[0-9]*")
 
-  def calculateWordFrequency(string: String): Map[String, Int] = {
-    string.split("\\s").foldLeft(Map.empty[String, Int]){
+  def calculateWordFrequency(string: String): MMap[String, Int] = {
+    string.split("\\s").foldLeft(MMap.empty[String, Int]){
       (wordsFrequency, word) => {
         pruneWord(word).foreach(prunedWord => {
-          val lowerWord: String = prunedWord.toLowerCase
-          if (lowerWord.nonEmpty){
-            wordsFrequency.get(lowerWord) match {
-              case None => wordsFrequency += (lowerWord -> 1)
-              case Some(s) => wordsFrequency += (lowerWord -> (s + 1))
+          val lowerCaseWord: String = prunedWord.toLowerCase
+          if (lowerCaseWord.nonEmpty){
+            wordsFrequency.get(lowerCaseWord) match {
+              case None => wordsFrequency += (lowerCaseWord -> 1)
+              case Some(s) => wordsFrequency += (lowerCaseWord -> (s + 1))
             }
           }
         })
